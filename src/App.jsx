@@ -528,7 +528,7 @@ export default function App() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-10">
           <p className="text-sm font-semibold tracking-wide text-indigo-600 uppercase">
-            Portfolio demo
+            Visual Hierarchy
           </p>
           <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900">
             Typographic Hierarchy Playground
@@ -589,7 +589,9 @@ export default function App() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+          </aside>
+                      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-900">Presets</h2>
               <p className="mt-1 text-sm text-slate-600">
                 Seven combinations, each paired with the layout it's built for.
@@ -618,7 +620,6 @@ export default function App() {
                 })}
               </div>
             </div>
-          </aside>
         </div>
       </main>
     </div>
