@@ -22,4 +22,4 @@ npm run preview
 ## Deploy
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds the site and publishes it to
-GitHub Pages. In the repo's **Settings → Pages**, set the source to **GitHub Actions** once.
+GitHub Pages.
