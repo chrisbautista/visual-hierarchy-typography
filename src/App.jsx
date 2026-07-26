@@ -498,11 +498,22 @@ const SCENES = {
   hero: HeroScene,
 };
 
+const SCENE_LABELS = {
+  article: 'Article',
+  list: 'Legal list',
+  card: 'Notification card',
+  meta: 'Update + meta',
+  quote: 'Pull-quote',
+  hero: 'Marketing hero',
+};
+
 export default function App() {
   const [values, setValues] = useState(DEFAULTS);
   const [activeScene, setActiveScene] = useState('article');
+  const [activeLever, setActiveLever] = useState('size');
 
   const setLever = (key) => (e) => {
+    setActiveLever(key);
     setValues((v) => ({ ...v, [key]: Number(e.target.value) }));
   };
 
@@ -522,6 +533,8 @@ export default function App() {
 
   const styles = deriveStyles(values);
   const ActiveScene = SCENES[activeScene];
+  const activePreset = PRESETS.find(isActivePreset);
+  const explainer = LEVERS.find((lever) => lever.key === activeLever);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -534,22 +547,69 @@ export default function App() {
             Typographic Hierarchy Playground
           </h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-600">
-            Visual hierarchy has many levers — layout, color, imagery. This one isolates the
-            typographic ones: drag the sliders to change font size, weight, spacing, and contrast
-            on the layout below, and watch where your eye lands first.
+            Drag the sliders — or pick a preset — and watch where your eye lands first.
           </p>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-10">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.6fr_1fr]">
-          {/* Preview stage */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:p-12">
-            <ActiveScene styles={styles} />
-          </section>
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1.6fr_1fr]">
+          {/* Preview stage, with a caption describing what you're looking at */}
+          <div className="space-y-4">
+            <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:p-12">
+              <ActiveScene styles={styles} />
+            </section>
+
+            {/* Fixed floor at lg so switching presets never nudges the layout. Below lg the
+                copy wraps taller than any floor would be, so the reserve is dropped. */}
+            <div role="status" className="px-1 lg:min-h-[9.5rem]">
+              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                {activePreset ? activePreset.label : 'Custom'} · {SCENE_LABELS[activeScene]}
+              </p>
+              {activePreset ? (
+                <>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {activePreset.focus}
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-indigo-700">
+                    Used for: {activePreset.usedFor}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  No preset matches these settings. Watch where your eye lands first — then pick a
+                  preset to see how the same layout reads at a different setting.
+                </p>
+              )}
+            </div>
+          </div>
 
           {/* Side panel */}
           <aside className="space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">Presets</h2>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {PRESETS.map((preset) => {
+                  const active = isActivePreset(preset);
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applyPreset(preset)}
+                      aria-pressed={active}
+                      className={`rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+                        active
+                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-slate-900">Controls</h2>
@@ -562,9 +622,9 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="mt-5 space-y-6">
+              <div className="mt-5 space-y-4">
                 {LEVERS.map((lever) => (
-                  <div key={lever.key}>
+                  <div key={lever.key} onMouseEnter={() => setActiveLever(lever.key)}>
                     <div className="flex items-baseline justify-between">
                       <label htmlFor={lever.key} className="text-sm font-semibold text-slate-800">
                         {lever.label}
@@ -581,45 +641,30 @@ export default function App() {
                       step={lever.step}
                       value={values[lever.key]}
                       onChange={setLever(lever.key)}
+                      onFocus={() => setActiveLever(lever.key)}
+                      aria-describedby={`${lever.key}-desc`}
                       className="mt-2 w-full accent-indigo-600"
                     />
-                    <p className="mt-2 text-sm leading-relaxed text-slate-600">{lever.blurb}</p>
+                    {/* Screen readers get each lever's own description; the shared panel
+                        below is a visual affordance only. */}
+                    <span id={`${lever.key}-desc`} className="sr-only">
+                      {lever.blurb}
+                    </span>
                   </div>
                 ))}
               </div>
-            </div>
 
-
-          </aside>
-                      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Presets</h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Seven combinations, each paired with the layout it's built for.
-              </p>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {PRESETS.map((preset) => {
-                  const active = isActivePreset(preset);
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => applyPreset(preset)}
-                      className={`rounded-lg border p-3 text-left transition-colors ${
-                        active
-                          ? 'border-indigo-500 bg-indigo-50'
-                          : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/50'
-                      }`}
-                    >
-                      <span className="text-sm font-semibold text-slate-900">{preset.label}</span>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-600">{preset.focus}</p>
-                      <p className="mt-2 text-xs font-medium text-indigo-700">
-                        Used for: {preset.usedFor}
-                      </p>
-                    </button>
-                  );
-                })}
+              <div
+                aria-hidden="true"
+                className="mt-5 border-t border-slate-200 pt-4 lg:min-h-[11.25rem]"
+              >
+                <p className="text-xs font-semibold tracking-wide text-indigo-600 uppercase">
+                  About: {explainer.label}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{explainer.blurb}</p>
               </div>
             </div>
+          </aside>
         </div>
       </main>
     </div>
